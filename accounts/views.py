@@ -1,3 +1,68 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout, get_user_model
+from .forms import RegistrationForm, LoginForm
+from .models import Role
 
-# Create your views here.
+User = get_user_model()
+
+def register_view(request):
+    if request.method == "POST":
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data["username"]
+            email = form.cleaned_data["email"]
+            password = form.cleaned_data["password1"]
+
+            user = User.objects.create_user(username=username, email=email, password=password)
+
+            try:
+                default_role = Role.objects.get(name="user")
+                user.role = default_role
+                user.save()
+            except Role.DoesNotExist:
+                pass
+
+            messages.success(request, "ثبت‌نام موفقیت‌آمیز بود. حالا می‌تونی وارد بشی.")
+            return redirect("accounts:login")
+    else:
+        form = RegistrationForm()
+    return render(request, "accounts/register.html", {"form": form})
+
+
+def login_view(request):
+    if request.method == "POST":
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            ue = form.cleaned_data["username_or_email"]
+            password = form.cleaned_data["password"]
+
+            if "@" in ue:
+                try:
+                    ue = User.objects.get(email__iexact=ue).username
+                except User.DoesNotExist:
+                    pass
+
+            user = authenticate(request, username=ue, password=password)
+            if user:
+                login(request, user)
+                messages.success(request, f"خوش آمدی {user.username}!")
+                return redirect("accounts:dashboard")
+            else:
+                messages.error(request, "نام کاربری/ایمیل یا رمز اشتباه است.")
+    else:
+        form = LoginForm()
+    return render(request, "accounts/login.html", {"form": form})
+
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, "خارج شدی.")
+    return redirect("accounts:login")
+
+
+def dashboard_view(request):
+    if not request.user.is_authenticated:
+        messages.warning(request, "لطفاً ابتدا وارد شوید.")
+        return redirect("accounts:login")
+    return render(request, "accounts/dashboard.html")
