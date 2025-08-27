@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}حساب کاربری{% endblock %}</title>
+</head>
+<body>
+    {% if messages %}
+        <ul>
+        {% for m in messages %}
+            <li>{{ m }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    <nav>
+        <a href="{% url 'accounts:register' %}">ثبت‌نام</a> |
+        <a href="{% url 'accounts:login' %}">ورود</a> |
+        <a href="{% url 'accounts:dashboard' %}">داشبورد</a> |
+        <a href="{% url 'accounts:logout' %}">خروج</a>
+    </nav>
+
+    <hr>
+    {% block content %}{% endblock %}
+</body>
+</html>
