@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}پروفایل{% endblock %}
+{% block content %}
+  <h2>پروفایل</h2>
+  <p><strong>نام کاربری:</strong> {{ user.username }}</p>
+  <p><strong>ایمیل:</strong> {{ user.email }}</p>
+  <p><strong>تاریخ عضویت:</strong> {{ user.created_at }}</p>
+  <p><strong>نقش:</strong> {{ user.role }}</p>
+  <a href="{% url 'accounts:edit_profile' %}">ویرایش پروفایل</a>
+{% endblock %}

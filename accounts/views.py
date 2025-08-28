@@ -1,8 +1,11 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model
-from .forms import RegistrationForm, LoginForm
+from .forms import RegistrationForm, LoginForm, ProfileEditForm
 from .models import Role
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
+
 
 User = get_user_model()
 
@@ -66,3 +69,26 @@ def dashboard_view(request):
         messages.warning(request, "لطفاً ابتدا وارد شوید.")
         return redirect("accounts:login")
     return render(request, "accounts/dashboard.html")
+
+@login_required
+def profile_view(request):
+    return render(request, "accounts/profile.html", {"user": request.user})
+
+@login_required
+def edit_profile_view(request):
+    if request.method == "POST":
+        form = ProfileEditForm(request.POST, instance=request.user)
+        if form.is_valid():
+            user = form.save(commit=False)
+            if form.cleaned_data.get("password1"):
+                user.set_password(form.cleaned_data["password1"])
+            user.save()
+            update_session_auth_hash(request, user)  # خروج کاربر بعد از تغییر رمز جلوگیری شود
+            messages.success(request, "پروفایل با موفقیت ویرایش شد.")
+            return redirect("accounts:profile")
+    else:
+        form = ProfileEditForm(instance=request.user)
+    return render(request, "accounts/edit_profile.html", {"form": form})
+
+def accounts_home(request):
+    return render(request, "accounts/home.html")

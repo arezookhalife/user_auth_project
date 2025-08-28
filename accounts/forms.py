@@ -36,3 +36,29 @@ class RegistrationForm(forms.ModelForm):
 class LoginForm(forms.Form):
     username_or_email = forms.CharField(label="نام‌کاربری یا ایمیل")
     password = forms.CharField(label="رمز عبور", widget=forms.PasswordInput)
+
+
+class ProfileEditForm(forms.ModelForm):
+    password1 = forms.CharField(label="رمز عبور جدید", widget=forms.PasswordInput, required=False)
+    password2 = forms.CharField(label="تکرار رمز عبور جدید", widget=forms.PasswordInput, required=False)
+
+    class Meta:
+        model = User
+        fields = ["username", "email", "address"]
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].lower()
+        qs = User.objects.filter(email=email).exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise ValidationError("این ایمیل قبلاً استفاده شده است.")
+        return email
+
+    def clean(self):
+        cleaned = super().clean()
+        p1, p2 = cleaned.get("password1"), cleaned.get("password2")
+        if p1 or p2:
+            if p1 != p2:
+                self.add_error("password2", "رمزهای عبور یکی نیستند.")
+            elif len(p1) < 8:
+                self.add_error("password1", "رمز عبور باید حداقل ۸ کاراکتر باشد.")
+        return cleaned
