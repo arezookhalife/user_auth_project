@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}ویرایش پروفایل{% endblock %}
+{% block content %}
+  <h2>ویرایش پروفایل</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">ذخیره تغییرات</button>
+    <button type="button" class="btn btn-primary" onclick="history.back()">بازگشت</button>
+  </form>
+{% endblock %}
