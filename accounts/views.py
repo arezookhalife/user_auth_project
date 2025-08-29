@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model
-from .forms import RegistrationForm, LoginForm, ProfileEditForm
+from .forms import RegistrationForm, LoginForm, ProfileEditForm, AvatarUploadForm
 from .models import Role
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
@@ -83,7 +83,7 @@ def edit_profile_view(request):
             if form.cleaned_data.get("password1"):
                 user.set_password(form.cleaned_data["password1"])
             user.save()
-            update_session_auth_hash(request, user)  # خروج کاربر بعد از تغییر رمز جلوگیری شود
+            update_session_auth_hash(request, user)
             messages.success(request, "پروفایل با موفقیت ویرایش شد.")
             return redirect("accounts:profile")
     else:
@@ -92,3 +92,22 @@ def edit_profile_view(request):
 
 def accounts_home(request):
     return render(request, "accounts/home.html")
+
+
+@login_required
+def upload_avatar_view(request):
+    if request.method == "POST":
+        form = AvatarUploadForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect("accounts:profile")
+    else:
+        form = AvatarUploadForm(instance=request.user)
+    return render(request, "accounts/upload_avatar.html", {"form": form})
+
+
+@login_required
+def delete_avatar_view(request):
+    if request.user.avatar:
+        request.user.avatar.delete(save=True)
+    return redirect("accounts:profile")

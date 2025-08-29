@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -133,3 +134,6 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
     "django.contrib.auth.hashers.ScryptPasswordHasher",
 ]
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"

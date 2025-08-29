@@ -11,4 +11,6 @@ urlpatterns = [
     path("dashboard/", views.dashboard_view, name="dashboard"),
     path("profile/", views.profile_view, name="profile"),
     path("profile/edit/", views.edit_profile_view, name="edit_profile"),
+    path("profile/avatar/", views.upload_avatar_view, name="upload_avatar"),
+    path("profile/avatar/delete/", views.delete_avatar_view, name="delete_avatar"),
 ]

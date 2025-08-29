@@ -62,3 +62,17 @@ class ProfileEditForm(forms.ModelForm):
             elif len(p1) < 8:
                 self.add_error("password1", "رمز عبور باید حداقل ۸ کاراکتر باشد.")
         return cleaned
+
+class AvatarUploadForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["avatar"]
+
+    def clean_avatar(self):
+        avatar = self.cleaned_data.get("avatar")
+        if avatar:
+            if avatar.size > 2 * 1024 * 1024:
+                raise forms.ValidationError("حجم فایل باید کمتر از ۲ مگابایت باشد.")
+            if not avatar.content_type in ["image/jpeg", "image/png", "image/gif"]:
+                raise forms.ValidationError("فرمت فایل فقط باید JPEG یا PNG یا GIF باشد.")
+        return avatar
