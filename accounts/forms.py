@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from .models import UserPost
 
 User = get_user_model()
 
@@ -76,3 +77,9 @@ class AvatarUploadForm(forms.ModelForm):
             if not avatar.content_type in ["image/jpeg", "image/png", "image/gif"]:
                 raise forms.ValidationError("فرمت فایل فقط باید JPEG یا PNG یا GIF باشد.")
         return avatar
+
+
+class PostForm(forms.ModelForm):
+    class Meta:
+        model = UserPost
+        fields = ["title", "content"]

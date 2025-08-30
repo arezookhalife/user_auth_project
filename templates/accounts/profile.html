@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% block title %}پروفایل{% endblock %}
+
 {% block content %}
-  <h2>پروفایل</h2>
+  <h2>پروفایل {{ user.username }}</h2>
+  <p><a href="{% url 'accounts:edit_profile' %}">ویرایش پروفایل</a></p>
   <p><strong>نام کاربری:</strong> {{ user.username }}</p>
   <p><strong>ایمیل:</strong> {{ user.email }}</p>
   <p><strong>تاریخ عضویت:</strong> {{ user.created_at }}</p>
@@ -14,9 +16,26 @@
 {% else %}
   <p>آواتار تنظیم نشده است.</p>
 {% endif %}
-
+<p><a href="{% url 'accounts:upload_avatar' %}">تغییر/آپلود آواتار</a></p>
 <br>
-<a href="{% url 'accounts:upload_avatar' %}">تغییر/آپلود آواتار</a>
 
-  <a href="{% url 'accounts:edit_profile' %}">ویرایش پروفایل</a>
+<h3>پست‌های شما:</h3>
+<a href="{% url 'accounts:create_post' %}">ایجاد پست جدید</a>
+<br><br>
+
+{% if posts %}
+  <ul>
+  {% for post in posts %}
+    <li>
+      <strong>{{ post.title }}</strong> - {{ post.created_at|date:"Y-m-d H:i" }}
+      <p>{{ post.content }}</p>
+      <a href="{% url 'accounts:edit_post' post.id %}">ویرایش</a> |
+      <a href="{% url 'accounts:delete_post' post.id %}">حذف</a>
+    </li>
+  {% endfor %}
+  </ul>
+{% else %}
+  <p>هنوز پستی ایجاد نکردید.</p>
+{% endif %}
+
 {% endblock %}

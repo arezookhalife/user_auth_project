@@ -1,8 +1,8 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model
-from .forms import RegistrationForm, LoginForm, ProfileEditForm, AvatarUploadForm
-from .models import Role
+from .forms import RegistrationForm, LoginForm, ProfileEditForm, AvatarUploadForm, PostForm
+from .models import Role, UserPost
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 
@@ -72,7 +72,11 @@ def dashboard_view(request):
 
 @login_required
 def profile_view(request):
-    return render(request, "accounts/profile.html", {"user": request.user})
+    posts = UserPost.objects.filter(user=request.user).order_by("-created_at")
+    return render(request, "accounts/profile.html", {
+        "user": request.user,
+        "posts": posts
+    })
 
 @login_required
 def edit_profile_view(request):
@@ -111,3 +115,41 @@ def delete_avatar_view(request):
     if request.user.avatar:
         request.user.avatar.delete(save=True)
     return redirect("accounts:profile")
+
+
+@login_required
+def create_post_view(request):
+    if request.method == "POST":
+        form = PostForm(request.POST)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.user = request.user
+            post.save()
+            return redirect("accounts:profile")
+    else:
+        form = PostForm()
+    return render(request, "accounts/create_post.html", {"form": form})
+
+@login_required
+def edit_post_view(request, post_id):
+    post = get_object_or_404(UserPost, id=post_id, user=request.user)
+    if request.method == "POST":
+        form = PostForm(request.POST, instance=post)
+        if form.is_valid():
+            form.save()
+            return redirect("accounts:profile")
+    else:
+        form = PostForm(instance=post)
+    return render(request, "accounts/edit_post.html", {"form": form})
+
+
+@login_required
+def delete_post_view(request, post_id):
+    post = get_object_or_404(UserPost, id=post_id, user=request.user)
+    if request.method == "POST":  # تایید حذف
+        post.delete()
+        return redirect("accounts:profile")
+    return render(request, "accounts/confirm_delete.html", {"post": post})
+
+
+
