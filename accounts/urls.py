@@ -13,4 +13,7 @@ urlpatterns = [
     path("profile/edit/", views.edit_profile_view, name="edit_profile"),
     path("profile/avatar/", views.upload_avatar_view, name="upload_avatar"),
     path("profile/avatar/delete/", views.delete_avatar_view, name="delete_avatar"),
+    path("posts/create/", views.create_post_view, name="create_post"),
+    path("posts/<int:post_id>/edit/", views.edit_post_view, name="edit_post"),
+    path("posts/<int:post_id>/delete/", views.delete_post_view, name="delete_post"),
 ]
