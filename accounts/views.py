@@ -1,13 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout, get_user_model
-from .forms import RegistrationForm, LoginForm, ProfileEditForm, AvatarUploadForm, PostForm
-from .models import Role, UserPost
+from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
+from .forms import RegistrationForm, LoginForm, ProfileEditForm, AvatarUploadForm, PostForm, CommentForm
+from .models import Role, UserPost, Like
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import update_session_auth_hash
+from django.db.models import Q, Count
 
 
 User = get_user_model()
+
 
 def register_view(request):
     if request.method == "POST":
@@ -50,7 +51,7 @@ def login_view(request):
             if user:
                 login(request, user)
                 messages.success(request, f"خوش آمدی {user.username}!")
-                return redirect("accounts:dashboard")
+                return redirect("accounts:home")
             else:
                 messages.error(request, "نام کاربری/ایمیل یا رمز اشتباه است.")
     else:
@@ -64,11 +65,17 @@ def logout_view(request):
     return redirect("accounts:login")
 
 
-def dashboard_view(request):
-    if not request.user.is_authenticated:
-        messages.warning(request, "لطفاً ابتدا وارد شوید.")
-        return redirect("accounts:login")
-    return render(request, "accounts/dashboard.html")
+def home_view(request):
+    latest_posts = UserPost.objects.order_by("-created_at")[:10]
+    trending_posts = UserPost.objects.annotate(
+        like_count=Count("likes")
+    ).order_by("-like_count")[:5]
+
+    return render(request, "accounts/home.html", {
+        "latest_posts": latest_posts,
+        "trending_posts": trending_posts,
+    })
+
 
 @login_required
 def profile_view(request):
@@ -77,6 +84,7 @@ def profile_view(request):
         "user": request.user,
         "posts": posts
     })
+
 
 @login_required
 def edit_profile_view(request):
@@ -93,6 +101,7 @@ def edit_profile_view(request):
     else:
         form = ProfileEditForm(instance=request.user)
     return render(request, "accounts/edit_profile.html", {"form": form})
+
 
 def accounts_home(request):
     return render(request, "accounts/home.html")
@@ -130,6 +139,7 @@ def create_post_view(request):
         form = PostForm()
     return render(request, "accounts/create_post.html", {"form": form})
 
+
 @login_required
 def edit_post_view(request, post_id):
     post = get_object_or_404(UserPost, id=post_id, user=request.user)
@@ -146,10 +156,56 @@ def edit_post_view(request, post_id):
 @login_required
 def delete_post_view(request, post_id):
     post = get_object_or_404(UserPost, id=post_id, user=request.user)
-    if request.method == "POST":  # تایید حذف
+    if request.method == "POST":
         post.delete()
         return redirect("accounts:profile")
     return render(request, "accounts/confirm_delete.html", {"post": post})
 
+
+def search_posts(request):
+    query = request.GET.get("q", "")
+    if query:
+        posts = UserPost.objects.filter(
+            Q(title__icontains=query) | Q(content__icontains=query)
+        )
+    else:
+        posts = UserPost.objects.all()
+    return render(request, "accounts/search_results.html", {
+        "posts": posts,
+        "query": query
+    })
+
+
+def post_detail(request, post_id):
+    post = get_object_or_404(UserPost, id=post_id)
+    comments = post.comments.all()
+
+    if request.method == "POST":
+        if not request.user.is_authenticated:
+            return redirect("accounts:login")
+
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.post = post
+            comment.user = request.user
+            comment.save()
+            return redirect("accounts:post_detail", post_id=post.id)
+    else:
+        form = CommentForm()
+
+    return render(request, "accounts/post_detail.html", {
+        "post": post,
+        "comments": comments,
+        "form": form
+    })
+
+
+@login_required
+def like_post(request, post_id):
+    post = get_object_or_404(UserPost, id=post_id)
+    if not Like.objects.filter(user=request.user).exists():
+        Like.objects.create(user=request.user, post=post)
+    return redirect("accounts:post_detail", post_id=post.id)
 
 

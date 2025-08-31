@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{ post.title }}</h2>
+<p>{{ post.content }}</p>
+<hr>
+<h3>نظرات</h3>
+<ul>
+    {% for comment in comments %}
+        <li><strong>{{ comment.user.username }}</strong>: {{ comment.content }}</li>
+    {% empty %}
+        <li>نظری وجود ندارد.</li>
+    {% endfor %}
+</ul>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <a href="{% url 'accounts:like_post' post.id %}">👍 لایک ({{ post.likes.count }})</a>
+    <button type="submit">ارسال نظر</button>
+</form>
+{% endblock %}
