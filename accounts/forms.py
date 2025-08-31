@@ -2,8 +2,11 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from .models import UserPost
+from .models import Comment
+
 
 User = get_user_model()
+
 
 class RegistrationForm(forms.ModelForm):
     password1 = forms.CharField(label="رمز عبور", widget=forms.PasswordInput)
@@ -64,6 +67,7 @@ class ProfileEditForm(forms.ModelForm):
                 self.add_error("password1", "رمز عبور باید حداقل ۸ کاراکتر باشد.")
         return cleaned
 
+
 class AvatarUploadForm(forms.ModelForm):
     class Meta:
         model = User
@@ -83,3 +87,9 @@ class PostForm(forms.ModelForm):
     class Meta:
         model = UserPost
         fields = ["title", "content"]
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ["content"]

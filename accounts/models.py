@@ -3,12 +3,14 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.utils import timezone
 from django.conf import settings
 
+
 class Role(models.Model):
     name = models.CharField(max_length=50, unique=True)
     description = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
         return self.name
+
 
 class UserManager(BaseUserManager):
     def create_user(self, username, email, password=None, role=None, **extra_fields):
@@ -27,6 +29,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(username, email, password, **extra_fields)
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=150, unique=True, db_index=True)
@@ -55,6 +58,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.username
 
+
 class UserRole(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
@@ -75,3 +79,21 @@ class UserPost(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Comment(models.Model):
+    post = models.ForeignKey("UserPost", related_name="comments", on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.content[:50]
+
+
+class Like(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    post = models.ForeignKey("UserPost", related_name="likes", on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ("user", "post")
