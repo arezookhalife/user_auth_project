@@ -4,8 +4,18 @@
   <h2>ویرایش پروفایل</h2>
   <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
+
+    <h4>اطلاعات کاربری</h4>
+    {{ form.username.label_tag }} {{ form.username }}<br>
+    {{ form.email.label_tag }} {{ form.email }}<br>
+    {{ form.address.label_tag }} {{ form.address }}<br>
+
+    <h4>تغییر رمز عبور</h4>
+    {{ form.password1.label_tag }} {{ form.password1 }}<br>
+    {{ form.password2.label_tag }} {{ form.password2 }}<br>
+
     <button type="submit">ذخیره تغییرات</button>
-    <button type="button" class="btn btn-primary" onclick="history.back()">بازگشت</button>
   </form>
+  <p><a href="{% url 'accounts:profile' %}">بازگشت به پروفایل</a></p>
+
 {% endblock %}
