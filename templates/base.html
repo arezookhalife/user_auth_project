@@ -21,7 +21,8 @@
             <a href="{% url 'accounts:logout' %}">خروج</a>
         {% else %}
             <a href="{% url 'accounts:register' %}">ثبت‌نام</a> |
-            <a href="{% url 'accounts:login' %}">ورود</a>
+            <a href="{% url 'accounts:login' %}">ورود</a> |
+            <a href="{% url 'accounts:password_reset' %}">فراموشی رمز عبور</a>
         {% endif %}
         <form method="get" action="{% url 'accounts:search_posts' %}">
             <input type="text" name="q" placeholder="جستجو...">

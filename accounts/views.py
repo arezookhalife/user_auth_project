@@ -156,6 +156,11 @@ def edit_post_view(request, post_id):
 @login_required
 def delete_post_view(request, post_id):
     post = get_object_or_404(UserPost, id=post_id, user=request.user)
+
+    if post.user != request.user and not request.user.is_superuser:
+        messages.error(request, "شما اجازه حذف این پست را ندارید.")
+        return redirect("accounts:profile")
+
     if request.method == "POST":
         post.delete()
         return redirect("accounts:profile")
@@ -204,7 +209,7 @@ def post_detail(request, post_id):
 @login_required
 def like_post(request, post_id):
     post = get_object_or_404(UserPost, id=post_id)
-    if not Like.objects.filter(user=request.user).exists():
+    if not Like.objects.filter(user=request.user, post=post).exists():
         Like.objects.create(user=request.user, post=post)
     return redirect("accounts:post_detail", post_id=post.id)
 

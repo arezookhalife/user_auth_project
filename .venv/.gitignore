@@ -1,0 +1,56 @@
+# -------------------------
+# Python cache files
+# -------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# -------------------------
+# Virtual environments
+# -------------------------
+.venv/
+env/
+ENV/
+
+# -------------------------
+# Django database
+# -------------------------
+*.sqlite3
+db.sqlite3
+
+# -------------------------
+# Django media and static files
+# -------------------------
+media/
+staticfiles/
+
+# -------------------------
+# Django migrations
+# -------------------------
+# Keep only initial migrations
+accounts/migrations/0001_initial.py
+accounts/migrations/__pycache__/
+
+# Ignore other migrations
+accounts/migrations/0002_*.py
+accounts/migrations/0003_*.py
+accounts/migrations/0004_*.py
+
+# -------------------------
+# IDEs and editors
+# -------------------------
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# -------------------------
+# OS generated files
+# -------------------------
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# Logs
+# -------------------------
+*.log
