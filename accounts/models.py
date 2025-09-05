@@ -73,28 +73,48 @@ class UserRole(models.Model):
 
 class UserPost(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts")
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, db_index=True)
     content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["user", "-created_at"]),  # لیست پست‌های کاربر به ترتیب جدیدتر
+            models.Index(fields=["-created_at"]),
+            models.Index(fields=["title"]),
+        ]
 
     def __str__(self):
         return self.title
 
 
 class Comment(models.Model):
-    post = models.ForeignKey("UserPost", related_name="comments", on_delete=models.CASCADE)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    post = models.ForeignKey("UserPost", related_name="comments", on_delete=models.CASCADE, db_index=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_index=True)
     content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["post", "-created_at"]),
+            models.Index(fields=["user", "-created_at"]),
+        ]
 
     def __str__(self):
         return self.content[:50]
 
 
 class Like(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    post = models.ForeignKey("UserPost", related_name="likes", on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_index=True)
+    post = models.ForeignKey("UserPost", related_name="likes", on_delete=models.CASCADE, db_index=True)
+
+    class Meta:
+        unique_together = ("user", "post")
+        indexes = [
+            models.Index(fields=["post"]),
+            models.Index(fields=["user"]),
+        ]
 
     class Meta:
         unique_together = ("user", "post")

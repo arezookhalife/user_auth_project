@@ -4,6 +4,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
 
 # -------------------------
 # Virtual environments
@@ -11,12 +12,19 @@ __pycache__/
 .venv/
 env/
 ENV/
+venv/
+env.bak/
 
 # -------------------------
 # Django database
 # -------------------------
 *.sqlite3
 db.sqlite3
+*.pot
+*.pyc
+db.sqlite3-journal
+media/
+staticfiles/
 
 # -------------------------
 # Django media and static files
@@ -54,3 +62,10 @@ Thumbs.db
 # Logs
 # -------------------------
 *.log
+
+# -------------------------
+# Cache
+# -------------------------
+*.cache
+cache/
+django_cache/

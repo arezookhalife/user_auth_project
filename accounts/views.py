@@ -2,9 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
 from .forms import RegistrationForm, LoginForm, ProfileEditForm, AvatarUploadForm, PostForm, CommentForm
-from .models import Role, UserPost, Like
+from .models import Role, UserPost, Like, Comment
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Prefetch
+from django.core.cache import cache
 
 
 User = get_user_model()
@@ -64,12 +65,31 @@ def logout_view(request):
     messages.success(request, "خارج شدی.")
     return redirect("accounts:login")
 
-
 def home_view(request):
-    latest_posts = UserPost.objects.order_by("-created_at")[:10]
-    trending_posts = UserPost.objects.annotate(
-        like_count=Count("likes")
-    ).order_by("-like_count")[:5]
+    latest_posts = cache.get("home_latest_posts")
+    if latest_posts is None:
+        latest_posts = (
+            UserPost.objects
+            .select_related("user")
+            .prefetch_related(Prefetch("comments"))
+            .annotate(
+                likes_count=Count("likes", distinct=True),
+                comments_count=Count("comments", distinct=True),
+            )
+            .order_by("-created_at")[:10]
+        )
+        cache.set("home_latest_posts", list(latest_posts), 120)  # ۲ دقیقه
+
+    trending_posts = cache.get("home_trending_posts")
+    if trending_posts is None:
+        trending_posts = (
+            UserPost.objects
+            .select_related("user")
+            .annotate(
+                like_count=Count("likes"))
+                .order_by("-like_count")[:5]
+        )
+        cache.set("home_trending_posts", list(trending_posts), 120)  # ۲ دقیقه
 
     return render(request, "accounts/home.html", {
         "latest_posts": latest_posts,
@@ -79,11 +99,18 @@ def home_view(request):
 
 @login_required
 def profile_view(request):
-    posts = UserPost.objects.filter(user=request.user).order_by("-created_at")
-    return render(request, "accounts/profile.html", {
-        "user": request.user,
-        "posts": posts
-    })
+    posts = (
+        UserPost.objects
+        .filter(user=request.user)
+        .select_related("user")
+        .prefetch_related("comments__user")
+        .annotate(
+            likes_count=Count("likes", distinct=True),
+            comments_count=Count("comments", distinct=True),
+        )
+        .order_by("-created_at")
+    )
+    return render(request, "accounts/profile.html", {"posts": posts})
 
 
 @login_required
@@ -101,10 +128,6 @@ def edit_profile_view(request):
     else:
         form = ProfileEditForm(instance=request.user)
     return render(request, "accounts/edit_profile.html", {"form": form})
-
-
-def accounts_home(request):
-    return render(request, "accounts/home.html")
 
 
 @login_required
@@ -168,13 +191,17 @@ def delete_post_view(request, post_id):
 
 
 def search_posts(request):
-    query = request.GET.get("q", "")
+    query = request.GET.get("q", "").strip()
+
+    qs = UserPost.objects.all().only("id", "title", "created_at", "user_id")
+
     if query:
-        posts = UserPost.objects.filter(
+        qs  = qs.filter(
             Q(title__icontains=query) | Q(content__icontains=query)
         )
-    else:
-        posts = UserPost.objects.all()
+
+    posts = qs.select_related("user").order_by("-created_at")
+
     return render(request, "accounts/search_results.html", {
         "posts": posts,
         "query": query
@@ -182,7 +209,14 @@ def search_posts(request):
 
 
 def post_detail(request, post_id):
-    post = get_object_or_404(UserPost, id=post_id)
+    post_qs = UserPost.objects.select_related("user").prefetch_related(
+        Prefetch(
+            "comments",
+            queryset=Comment.objects.select_related("user").order_by("-created_at")
+        )
+    ).annotate(like_count=Count("likes"))
+
+    post = get_object_or_404(post_qs, id=post_id)
     comments = post.comments.all()
 
     if request.method == "POST":
@@ -195,6 +229,7 @@ def post_detail(request, post_id):
             comment.post = post
             comment.user = request.user
             comment.save()
+            cache.delete(f"post_detail_{post.id}")
             return redirect("accounts:post_detail", post_id=post.id)
     else:
         form = CommentForm()
