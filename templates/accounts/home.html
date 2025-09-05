@@ -1,32 +1,31 @@
 {% extends "base.html" %}
-
 {% block title %}خانه{% endblock %}
 
 {% block content %}
-
 <h2>آخرین پست‌ها</h2>
 <ul>
-  {% for post in latest_posts %}
-    <li>
-      <a href="{% url 'accounts:post_detail' post.id %}">{{ post.title }}</a>
-      - توسط {{ post.user.username }}
-    </li>
-  {% empty %}
-    <li>هنوز پستی وجود ندارد.</li>
-  {% endfor %}
+    {% for post in latest_posts %}
+      <li>
+        <a href="{% url 'accounts:post_detail' post.id %}">{{ post.title }}</a>
+        - توسط {{ post.user.username }}
+      </li>
+    {% empty %}
+      <li>هنوز پستی وجود ندارد.</li>
+    {% endfor %}
 </ul>
 
 <h2>ترندها</h2>
 <ul>
-  {% for post in trending_posts %}
-    <li>
-      <a href="{% url 'accounts:post_detail' post.id %}">{{ post.title }}</a>
-      ({{ post.likes.count }} لایک)
-    </li>
-  {% empty %}
-    <li>پست ترندی وجود ندارد.</li>
-  {% endfor %}
+    {% for post in trending_posts %}
+      <li>
+        <a href="{% url 'accounts:post_detail' post.id %}">{{ post.title }}</a>
+        ({{ post.likes.count }} لایک)
+      </li>
+    {% empty %}
+      <li>پست ترندی وجود ندارد.</li>
+    {% endfor %}
 </ul>
+
 
 {% if user.is_authenticated %}
   <p><a href="{% url 'accounts:create_post' %}">✍️ نوشتن پست جدید</a></p>

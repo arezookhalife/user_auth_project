@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block title %}پروفایل{% endblock %}
 
+{% load cache %}
+
 {% block content %}
   <h2>پروفایل {{ user.username }}</h2>
   <p><a href="{% url 'accounts:edit_profile' %}">ویرایش پروفایل</a></p>
@@ -9,33 +11,42 @@
   <p><strong>تاریخ عضویت:</strong> {{ user.created_at }}</p>
   <p><strong>نقش:</strong> {{ user.role }}</p>
 
-{% if user.avatar %}
-  <img src="{{ user.avatar.url }}" alt="Avatar" width="100">
+  {% if user.avatar %}
+    <img src="{{ user.avatar.url }}" alt="Avatar" width="100">
+    <br>
+    <a href="{% url 'accounts:delete_avatar' %}">حذف آواتار</a>
+  {% else %}
+    <p>آواتار تنظیم نشده است.</p>
+  {% endif %}
+  <p><a href="{% url 'accounts:upload_avatar' %}">تغییر/آپلود آواتار</a></p>
   <br>
-  <a href="{% url 'accounts:delete_avatar' %}">حذف آواتار</a>
-{% else %}
-  <p>آواتار تنظیم نشده است.</p>
-{% endif %}
-<p><a href="{% url 'accounts:upload_avatar' %}">تغییر/آپلود آواتار</a></p>
-<br>
 
-<h3>پست‌های شما:</h3>
-<a href="{% url 'accounts:create_post' %}">ایجاد پست جدید</a>
-<br><br>
+  {% cache 120 user_posts_block user.id %}
+    <h3>پست‌های شما:</h3>
+    <a href="{% url 'accounts:create_post' %}">ایجاد پست جدید</a>
+    <br><br>
 
-{% if posts %}
-  <ul>
-  {% for post in posts %}
-    <li>
-      <strong>{{ post.title }}</strong> - {{ post.created_at|date:"Y-m-d H:i" }}
-      <p>{{ post.content }}</p>
-      <a href="{% url 'accounts:edit_post' post.id %}">ویرایش</a> |
-      <a href="{% url 'accounts:delete_post' post.id %}">حذف</a>
-    </li>
-  {% endfor %}
-  </ul>
-{% else %}
-  <p>هنوز پستی ایجاد نکردید.</p>
-{% endif %}
+    {% if posts %}
+      <ul>
+      {% for post in posts %}
+        <li>
+          <strong>{{ post.title }}</strong>
+          - {{ post.created_at|date:"Y-m-d H:i" }}
+          <p>{{ post.content }}</p>
+
+          <span>👍 {{ post.likes_count }}</span>
+          <span>💬 {{ post.comments_count }}</span>
+
+          <a href="{% url 'accounts:edit_post' post.id %}">ویرایش</a> |
+          <a href="{% url 'accounts:delete_post' post.id %}">حذف</a> |
+          <a href="{% url 'accounts:post_detail' post.id %}">جزئیات</a>
+
+        </li>
+      {% endfor %}
+      </ul>
+    {% else %}
+      <p>هنوز پستی ایجاد نکردید.</p>
+    {% endif %}
+  {% endcache %}
 
 {% endblock %}
