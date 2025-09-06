@@ -80,7 +80,7 @@ class UserPost(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=["user", "-created_at"]),  # لیست پست‌های کاربر به ترتیب جدیدتر
+            models.Index(fields=["user", "-created_at"]),
             models.Index(fields=["-created_at"]),
             models.Index(fields=["title"]),
         ]
@@ -102,7 +102,7 @@ class Comment(models.Model):
         ]
 
     def __str__(self):
-        return self.content[:50]
+        return f"{self.user.username}: {self.content[:50]}"
 
 
 class Like(models.Model):
@@ -115,6 +115,3 @@ class Like(models.Model):
             models.Index(fields=["post"]),
             models.Index(fields=["user"]),
         ]
-
-    class Meta:
-        unique_together = ("user", "post")
