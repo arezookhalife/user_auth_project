@@ -78,7 +78,7 @@ def home_view(request):
             )
             .order_by("-created_at")[:10]
         )
-        cache.set("home_latest_posts", list(latest_posts), 120)  # ۲ دقیقه
+        cache.set("home_latest_posts", list(latest_posts), 120)
 
     trending_posts = cache.get("home_trending_posts")
     if trending_posts is None:
@@ -89,7 +89,7 @@ def home_view(request):
                 like_count=Count("likes"))
                 .order_by("-like_count")[:5]
         )
-        cache.set("home_trending_posts", list(trending_posts), 120)  # ۲ دقیقه
+        cache.set("home_trending_posts", list(trending_posts), 120)
 
     return render(request, "accounts/home.html", {
         "latest_posts": latest_posts,
